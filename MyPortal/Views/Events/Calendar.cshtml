@@ -1,0 +1,383 @@
+﻿@{
+    ViewBag.Title = "Calendar";
+}
+
+<link href="~/Content/fullcalendar.css" rel="stylesheet" />
+<link href="~/Content/fullcalendar.print.css" rel="stylesheet" media='print' />
+<script src="~/Scripts/moment.min.js"></script>
+<script src="~/Scripts/jquery-ui.custom.min.js"></script>
+<script src="~/Scripts/fullcalendar.js"></script>
+
+<link href="~/Content/datepicker.css" rel="stylesheet" />
+<script src="~/Scripts/bootstrap-datepicker.js"></script>
+
+<script src="~/Scripts/jquery.signalR-2.1.1.js"></script>
+<script src="/signalr/hubs"></script>
+
+<script>
+
+    $(document).ready(function () {
+
+        $('#calendar').fullCalendar({
+            header: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'month,agendaWeek,agendaDay'
+            },
+            defaultDate: '@DateTime.Now.ToString("yyyy-MM-d")',
+            editable: true,
+            events: {
+                url: '/api/events/GetFullCalendarEvents',
+                error: function() {
+                    $('#script-warning').show();
+                }
+            },
+            loading: function(bool) {
+                $('#loading').toggle(bool);
+            },
+            eventClick: function (event) {
+                // opens events in a popup window
+                //window.open(event.url, 'gcalevent', 'width=700,height=600');
+                GetEventForEdit(event.id);
+                return false;
+            },
+            dayClick: function (date, jsEvent, view) {
+                $('#StartDate').val(date.format());
+                $('#EndDate').val(date.format());
+                $('#ModalCreate').modal('show');
+                //alert('Clicked on: ' + date.format());
+                //alert('Coordinates: ' + jsEvent.pageX + ',' + jsEvent.pageY);
+                //alert('Current view: ' + view.name);
+                //// change the day's background color just for fun
+                //$(this).css('background-color', 'red');
+
+            }
+        });
+
+        $('#StartDate').datepicker({
+            format: "yyyy/mm/dd",
+            autoclose: true,
+            todayHighlight: true
+        });
+        $('#EndDate').datepicker({
+            format: "yyyy/mm/dd",
+            autoclose: true,
+            todayHighlight: true
+        });
+
+        $('#EditStartDate').datepicker({
+            format: "yyyy/mm/dd",
+            autoclose: true,
+            todayHighlight: true
+        });
+        $('#EditEndDate').datepicker({
+            format: "yyyy/mm/dd",
+            autoclose: true,
+            todayHighlight: true
+        });
+
+    });
+
+    function AddEvent() {
+        var e = {
+            Title: $('#Title').val(),
+            Detail: $('#Detail').val(),
+            Url: $('#Url').val(),
+            Address: $('#Address').val(),
+            StartDate: $('#StartDate').val(),
+            EndDate: $('#EndDate').val()
+        };
+        debugger;
+        $.ajax({
+            url: '/api/events',
+            type: 'POST',
+            data: JSON.stringify(e),
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                alert('Event added Successfully');
+                $('#ModalCreate').modal('hide')
+                RefetchEvents();
+                //$('#calendar').fullCalendar('refetchEvents');
+
+
+            },
+            error: function () {
+                alert('Event was not Added');
+            }
+        });
+    }
+
+    $(function () {
+        //Declare a proxy to reference the hub
+        var eventtHub = $.connection.eventHub;
+
+        eventtHub.client.broadcastEvent = function () {
+            $('#calendar').fullCalendar('refetchEvents');
+        };
+
+        $.connection.hub.start().done();
+
+    });
+
+    function RefetchEvents(id) {
+        //Declare a proxy to reference the hub
+        var eventtHub = $.connection.eventHub;
+        //start the connection.
+        $.connection.hub.start().done();
+        //$('#calendar').fullCalendar('refetchEvents');
+        eventtHub.server.sendEventInformation();
+    }
+
+    function GetEventForEdit(id) {
+        $.ajax({
+            url: '/api/events/' + id,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#EditEventId').val(data.Id);
+                $('#EditTitle').val(data.Title);
+                $('#EditDetail').val(data.Detail);
+                $('#EditUrl').val(data.Url);
+                $('#EditAddress').val(data.Address);
+                $('#EditStartDate').val(data.StartDate);
+                $('#EditEndDate').val(data.EndDate);
+
+                $('#ModalUpdate').modal('show')
+            },
+            error: function (error) {
+                debugger;
+                alert('Error Loading Event');
+            }
+        });
+    }
+
+    function UpdateEvent() {
+        var e = {
+            Id: $('#EditEventId').val(),
+            Title: $('#EditTitle').val(),
+            Detail: $('#EditDetail').val(),
+            Url: $('#EditUrl').val(),
+            Address: $('#EditAddress').val(),
+            StartDate: $('#EditStartDate').val(),
+            EndDate: $('#EditEndDate').val()
+        };
+        $.ajax({
+            url: '/api/events/' + +$('#EditEventId').val(),
+            type: 'PUT',
+            data: JSON.stringify(e),
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                alert('Event updated Successfully');
+                $('#ModalUpdate').modal('hide')
+                //$('#calendar').fullCalendar('refetchEvents');
+                RefetchEvents();
+            },
+            error: function () {
+                alert('Event was not updated');
+            }
+        });
+    }
+
+    function DeleteEvent() {
+        //var e = {
+        //    Id: $('#EditEventId').val(),
+        //    Title: $('#EditTitle').val(),
+        //    Detail: $('#EditDetail').val(),
+        //    Url: $('#EditUrl').val(),
+        //    Address: $('#EditAddress').val(),
+        //    StartDate: $('#EditStartDate').val(),
+        //    EndDate: $('#EditEndDate').val()
+        //};
+        $.ajax({
+            url: '/api/events/' + +$('#EditEventId').val(),
+            type: 'DELETE',
+            data: $('#EditEventId').val(), //JSON.stringify(e),
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                alert('Event deleted Successfully');
+                $('#ModalUpdate').modal('hide')
+                //$('#calendar').fullCalendar('refetchEvents');
+                RefetchEvents();
+            },
+            error: function () {
+                alert('Event was not deleted');
+            }
+        });
+    }
+
+
+
+</script>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+        font-size: 14px;
+    }
+
+    #script-warning {
+        display: none;
+        background: #eee;
+        border-bottom: 1px solid #ddd;
+        padding: 0 10px;
+        line-height: 40px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 12px;
+        color: red;
+    }
+
+    #loading {
+        display: none;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+
+    #calendar {
+        width: 900px;
+        margin: 40px auto;
+    }
+</style>
+
+<style>
+    .datepicker {
+        z-index: 1151 !important;
+    }
+</style>
+
+<h2>Calendar</h2>
+<div id='script-warning'>
+    fail to get data
+</div>
+<div id='loading'>loading...</div>
+<div id='calendar'></div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="ModalCreate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="myModalLabel">Create Event</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Title</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="Title" />
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Detail</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="Detail" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Url</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="Url" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Address</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="Address" />
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">StartDate</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="StartDate" />
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">EndDate</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EndDate" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="AddEvent()">Add Event</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="ModalUpdate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="myModalLabel">Update Event</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Id</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditEventId" readonly />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Title</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditTitle" />
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Detail</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditDetail" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Url</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditUrl" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Address</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditAddress" />
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">StartDate</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditStartDate" />
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">EndDate</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditEndDate" />
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="UpdateEvent()">Update Event</button>
+                <button type="button" class="btn btn-danger" onclick="DeleteEvent()">Delete Event</button>
+            </div>
+        </div>
+    </div>
+</div>

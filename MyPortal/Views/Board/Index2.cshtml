@@ -1,0 +1,192 @@
+﻿@model IEnumerable<MyPortal.Models.Article>
+
+@{
+    ViewBag.Title = "Index2";
+}
+
+<script src="~/Scripts/jquery-1.10.2.js"></script>
+
+<h2>Index2</h2>
+
+@{
+    var grid = new WebGrid(Model, canPage: true, rowsPerPage: 5, selectionFieldName: "selectedRow");
+    grid.Pager(WebGridPagerModes.NextPrevious);
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('.edit-mode').hide();
+    });
+
+    $('.edit-button').on("click", function () {
+        // allEditableRow : will have all rows which are editable (where save button is visible).
+        var allEditableRow = $("[src='/Content/images/save.jpg']");
+
+        // make row editable only if no other row is editable as of now by toggle
+        // otherwise go to else and save data of editable row first or alert to save that"
+        if (allEditableRow.length == 0) {
+            var tr = $(this).parents('tr:first');
+            tr.find('.edit-mode,.display-mode').toggle();
+            var imageSource = $(this).attr('src');
+
+            if (imageSource == '/Content/images/edit.jpg') {
+                $(this).attr('src', '/Content/images/save.jpg');
+                $(this).attr('title', 'Save Customer');
+            }
+
+        }
+        else {
+            // making sure that only one row is editable and save button of editable row is clicked
+            if (allEditableRow.length == 1 && $(this).attr('src') == '/Content/images/save.jpg') {
+
+                var selectedId = $(this).parents('tr').find('td:nth-child(1)').text().trim();
+                var selectedName = $(this).parents('tr').find('#CustomerName').val();
+                var selectedAddless = $(this).parents('tr').find('#CustomerAddress').val();
+                // create object with updated values
+                var customerModel =
+                    {
+                        "CustomerId": selectedId,
+                        "CustomerName": selectedName,
+                        "CustomerAddress": selectedAddless
+                    };
+                $.ajax({
+                    url: '/Customer/EditCustomer',
+                    type: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(customerModel)
+                });
+
+                alert("Your data is saved");
+                window.location.reload(true);
+                $(this).attr('src', '/Content/images/edit.jpg');
+
+            }
+            else {
+                alert("Please finish the editing of current editable row. Save first");
+            }
+        }
+
+    });
+
+    $('a').click(function () {
+        $(this).attr('data-swhglnk', 'false');
+    });
+
+    $('.delete-customer').click(function () {
+        var selectedId = $(this).parents('tr').find('td:nth-child(1)').text().trim();
+        var selectedName = $(this).parents('tr').find('#CustomerName').val();
+        var message = "Please confirm delete for Customer ID " + selectedId + ", and Name: " + selectedName + " ? \nClick 'OK' to delete otherwise 'Cancel'.";
+        if (confirm(message) == true) {
+            selectedId = $(this).parents('tr:first').children('td:first').text();
+            $.ajax({
+                url: '/Customer/DeleteCustomer',
+                data: { id: selectedId },
+                type: 'POST',
+                success: function () {
+                    window.location.reload();
+                },
+                error: function (xhr) {
+                    alert("something seems wrong");
+                }
+            });
+        }
+        else {
+            alert("Delete is Canceled!");
+        }
+    });
+
+    $('.btnCustomerPV').click(function () {
+        $('.btnCustomerPV').hide();
+
+        $.ajax({
+            // Call CreatePartialView action method
+            url: '/Customer/GetCustomerPV',
+            type: 'Get',
+            success: function (data) {
+                $("#placeHolderCustomerPV").empty().append(data);
+
+            },
+            error: function () {
+                alert("something seems wrong");
+            }
+        });
+    });
+
+</script>
+
+<style>
+    body {
+        padding-top: 50px;
+        padding-bottom: 20px;
+    }
+
+    /* Set padding to keep content from hitting the edges */
+    .body-content {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    /* Set width on the form input elements since they're 100% wide by default */
+    input,
+    select,
+    textarea {
+        max-width: 280px;
+    }
+
+    /* styles for validation helpers */
+    .field-validation-error {
+        color: #b94a48;
+    }
+
+    .field-validation-valid {
+        display: none;
+    }
+
+    input.input-validation-error {
+        border: 1px solid #b94a48;
+    }
+
+    input[type="checkbox"].input-validation-error {
+        border: 0 none;
+    }
+
+    .validation-summary-errors {
+        color: #b94a48;
+    }
+
+    .validation-summary-valid {
+        display: none;
+    }
+</style>
+
+<div id="gridContent">
+
+    @grid.GetHtml(tableStyle: "webGrid",
+            headerStyle: "header",
+            alternatingRowStyle: "alt",
+            selectedRowStyle: "select",
+            rowStyle: "webgrid-row-style",
+            columns: grid.Columns(
+                        grid.Column("ArticleId", "Article Id",
+                        @<text> <span id="spnArticleId">@item.ArticleId</span></text>,
+                                canSort: false),
+                        grid.Column("Title", "Title", format:
+                        @<text>
+                            <span id="spnTitle" class="display-mode">@item.Title</span>
+                            <input type="text" id="Title" value="@item.Title" class="edit-mode" />
+                        </text>,
+                                canSort: false),
+                        grid.Column("Content", "Content", format:
+                        @<text>
+                            <span id="spnContent" class="display-mode">@item.Content</span>
+                            <input type="text" id="Location" value="@item.Location" class="edit-mode" />
+                        </text>,
+                                canSort: false),
+                        grid.Column("Action", format:
+                        @<text>
+    <button id="btnEdit" class="edit-button">Edit</button>
+    <button id="btnDelete" class="delete-customer">Delete</button>
+                        </text>,
+                                style: "width:220px", canSort: false)
+            ))
+</div>

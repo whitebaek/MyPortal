@@ -1,0 +1,18 @@
+﻿@model IEnumerable<MyPortal.Models.Comment>
+
+<div id="comments">
+    <ul>
+        @foreach (var item in Model)
+        {
+            <li>
+                @Html.DisplayFor(modelItem => item.Content)
+            </li>
+        }
+    </ul>
+
+    @using (Ajax.BeginForm("_Submit", "Comment", new AjaxOptions() { UpdateTargetId = "comments" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.Action("_CommentForm", new { ArticleId = ViewBag.ArticleId })
+    }
+</div>

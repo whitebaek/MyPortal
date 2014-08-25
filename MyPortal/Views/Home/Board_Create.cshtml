@@ -1,0 +1,152 @@
+﻿@{
+    ViewBag.Title = "Board_Create";
+}
+
+<script type="text/javascript">
+
+    function GetAllArticles() {
+        $.ajax({
+            url: 'http://localhost:4744/api/board',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                BindArticles(data);
+            },
+            error: function (error) {
+                debugger;
+                alert('Error Loading Articles');
+            }
+        });
+    }
+
+    function GetArticleForEdit() {
+        $.ajax({
+            url: 'http://localhost:4744/api/board/' + $('#txtArticleID').val(),
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#EditArticleTitle').val(data.Name);
+                $('#EditArticleContent').val(data.Address);
+                $('#EditArticleLocation').val(data.City);
+            },
+            error: function (error) {
+                debugger;
+                alert('Error Loading Article');
+            }
+        });
+    }
+
+    function UpdateArticle() {
+        var article = {
+            ArticleId: $('#txtArticleID').val(),
+            Title: $('#EditArticleTitle').val(),
+            Content: $('#EditArticleContent').val(),
+            Location: $('#EditArticleLocation').val()
+        };
+        $.ajax({
+            url: 'http://localhost:4744/api/board/' + +$('#txtArticleID').val(),
+            type: 'PUT',
+            data: JSON.stringify(article),
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                alert('Article updated Successfully');
+            },
+            error: function () {
+                alert('Article was not Added');
+            }
+        });
+    }
+
+    function BindArticles(articles) {
+        $('#articleList').empty();
+        $.each(articles, function (index, article) {
+            $('#articleList').append
+                ("<li>" + article.ArticleId + " - "
+                                + article.Title + "</li>");
+        });
+    }
+
+    function AddArticle() {
+        var article = {
+            Title: $('#ArticleTitle').val(),
+            Content: $('#ArticleContent').val(),
+            Location: $('#ArticleLocation').val()
+        };
+        debugger;
+        $.ajax({
+            url: 'http://localhost:4744/api/board/',
+            type: 'POST',
+            data: JSON.stringify(article),
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                alert('Article added Successfully');
+                GetAllStudents();
+            },
+            error: function () {
+                alert('Article was not Added');
+            }
+        });
+    }
+
+</script>
+
+<style type="text/css">
+    label {
+        width: 65px;
+        display: inline-block;
+    }
+</style>
+
+
+
+<h2>Board_Create</h2>
+
+<ul id="articleList"></ul>
+
+<input id="btnGetAll" name="btnGetAll"
+       type="button" value="Get All Articles"
+       onclick="GetAllArticles()" />
+
+<br />
+
+<h2>Add New Article</h2>
+
+<label>Title : </label>
+<input type="text" id="ArticleTitle" />
+<br />
+<label>Content : </label>
+<input type="text" id="ArticleContent" />
+<br />
+<label>Location : </label>
+<input type="text" id="ArticleLocation" />
+
+<br />
+<input id="btnAddArticle" name="btnAddArticle"
+       type="button" value="Add Article"
+       onclick="AddArticle()" />
+
+<h2>Edit Article</h2>
+
+<p>
+    Enter ArticleID :
+    <input type="text" id="txtArticleID" />
+    <input type="button" value="Edit"
+           onclick="GetArticleForEdit()" />
+</p>
+<span></span>
+
+<label>Title : </label>
+<input type="text" id="EditArticleTitle" />
+<br />
+<label>Content : </label>
+<input type="text" id="EditArticleContent" />
+<br />
+<label>Location : </label>
+<input type="text" id="EditArticleLocation" />
+
+<br />
+<input id="btnUpdateArticle" name="btnUpdateArticle"
+       type="button" value="Update Article"
+       onclick="UpdateArticle()" />
+
+

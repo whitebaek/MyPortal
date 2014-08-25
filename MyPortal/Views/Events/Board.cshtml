@@ -1,0 +1,327 @@
+﻿
+@model MyPortal.Models.EventModel
+
+@{
+    ViewBag.Title = "Board";
+}
+
+<link href="~/Content/datepicker.css" rel="stylesheet" />
+<script src="~/Scripts/bootstrap-datepicker.js"></script>
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        $('#StartDate').datepicker({
+            format: "yyyy/mm/dd",
+            autoclose: true,
+            todayHighlight: true
+        });
+        $('#EndDate').datepicker({
+            format: "yyyy/mm/dd",
+            autoclose: true,
+            todayHighlight: true
+        });
+
+        $('#EditStartDate').datepicker({
+            format: "yyyy/mm/dd",
+            autoclose: true,
+            todayHighlight: true
+        });
+        $('#EditEndDate').datepicker({
+            format: "yyyy/mm/dd",
+            autoclose: true,
+            todayHighlight: true
+        });
+    });
+
+    function GetAllEvents() {
+        $.ajax({
+            url: '/api/events',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                BindEvents(data);
+            },
+            error: function (error) {
+                debugger;
+                alert('Error Loading Events');
+            }
+        });
+    }
+
+    function InitEventTable() {
+        $('#eventTable').empty();
+        $('#eventTable').append("<tr><th>Id</th><th>Title</th><th>Detail</th></tr>");
+    }
+
+    function BindEvents(events) {
+        InitEventTable();
+        $.each(events, function (index, e) {
+            $('#eventTable').append
+                ("<tr><td><a href='javascript:GetEventForEdit(" + e.Id + ");'>" + e.Id + "</a></td><td><a href='javascript:GetEventForEdit(" + e.Id + ");'>" + e.Title + "</a></td><td>" + e.Detail + "</td></tr>");
+        });
+    }
+
+    function AddEvent() {
+        var e = {
+            Title: $('#Title').val(),
+            Detail: $('#Detail').val(),
+            Url: $('#Url').val(),
+            Address: $('#Address').val(),
+            StartDate: $('#StartDate').val(),
+            EndDate: $('#EndDate').val()
+        };
+        debugger;
+        $.ajax({
+            url: '/api/events',
+            type: 'POST',
+            data: JSON.stringify(e),
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                alert('Event added Successfully');
+                $('#ModalCreate').modal('hide')
+                GetAllEvents();
+            },
+            error: function () {
+                alert('Event was not Added');
+            }
+        });
+    }
+
+
+    function GetEventForEdit(id) {
+        $.ajax({
+            url: '/api/events/' + id,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#EditEventId').val(data.Id);
+                $('#EditTitle').val(data.Title);
+                $('#EditDetail').val(data.Detail);
+                $('#EditUrl').val(data.Url);
+                $('#EditAddress').val(data.Address);
+                $('#EditStartDate').val(data.StartDate);
+                $('#EditEndDate').val(data.EndDate);
+
+                $('#ModalUpdate').modal('show')
+            },
+            error: function (error) {
+                debugger;
+                alert('Error Loading Event');
+            }
+        });
+    }
+
+    function UpdateEvent() {
+        var e = {
+            Id: $('#EditEventId').val(),
+            Title: $('#EditTitle').val(),
+            Detail: $('#EditDetail').val(),
+            Url: $('#EditUrl').val(),
+            Address: $('#EditAddress').val(),
+            StartDate: $('#EditStartDate').val(),
+            EndDate: $('#EditEndDate').val()
+        };
+        $.ajax({
+            url: '/api/events/' + +$('#EditEventId').val(),
+            type: 'PUT',
+            data: JSON.stringify(e),
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                alert('Event updated Successfully');
+                $('#ModalUpdate').modal('hide')
+                GetAllEvents();
+
+            },
+            error: function () {
+                alert('Event was not updated');
+            }
+        });
+    }
+
+
+    function DeleteEvent() {
+        //var e = {
+        //    Id: $('#EditEventId').val(),
+        //    Title: $('#EditTitle').val(),
+        //    Detail: $('#EditDetail').val(),
+        //    Url: $('#EditUrl').val(),
+        //    Address: $('#EditAddress').val(),
+        //    StartDate: $('#EditStartDate').val(),
+        //    EndDate: $('#EditEndDate').val()
+        //};
+        $.ajax({
+            url: '/api/events/' + +$('#EditEventId').val(),
+            type: 'DELETE',
+            data: $('#EditEventId').val(), //JSON.stringify(e),
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                alert('Event deleted Successfully');
+                $('#ModalUpdate').modal('hide')
+                GetAllEvents();
+            },
+            error: function () {
+                alert('Event was not deleted');
+            }
+        });
+    }
+
+</script>
+
+<style>
+    .datepicker {
+        z-index: 1151 !important;
+    }
+</style>
+
+<h2>Board</h2>
+
+<table class="table table-striped" id="eventTable"></table>
+<input id="btnGetAll" name="btnGetAll"
+       type="button" value="Get All Events" class="btn btn-default btn-sm"
+       onclick="GetAllEvents()" />
+<br /> <br />
+<!-- Button trigger modal -->
+<button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#ModalCreate">
+    Create Event
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="ModalCreate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="myModalLabel">Create Event</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <form role="form">
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-4" })
+                            <div class="col-md-8">
+                                @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })
+                                @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.Detail, htmlAttributes: new { @class = "control-label col-md-4" })
+                            <div class="col-md-8">
+                                @Html.EditorFor(model => model.Detail, new { htmlAttributes = new { @class = "form-control" } })
+                                @Html.ValidationMessageFor(model => model.Detail, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.Url, htmlAttributes: new { @class = "control-label col-md-4" })
+                            <div class="col-md-8">
+                                @Html.EditorFor(model => model.Url, new { htmlAttributes = new { @class = "form-control" } })
+                                @Html.ValidationMessageFor(model => model.Url, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.Address, htmlAttributes: new { @class = "control-label col-md-4" })
+                            <div class="col-md-8">
+                                @Html.EditorFor(model => model.Address, new { htmlAttributes = new { @class = "form-control" } })
+                                @Html.ValidationMessageFor(model => model.Address, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.StartDate, htmlAttributes: new { @class = "control-label col-md-4" })
+                            <div class="col-md-8">
+                                @Html.EditorFor(model => model.StartDate, new { htmlAttributes = new { @class = "form-control " } })
+                                @Html.ValidationMessageFor(model => model.StartDate, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.EndDate, htmlAttributes: new { @class = "control-label col-md-4" })
+                            <div class="col-md-8">
+                                @Html.EditorFor(model => model.EndDate, new { htmlAttributes = new { @class = "form-control" } })
+                                @Html.ValidationMessageFor(model => model.EndDate, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="AddEvent()">Add Event</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="ModalUpdate" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="myModalLabel">Update Event</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Id</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditEventId" readonly />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Title</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditTitle" />
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Detail</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditDetail" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Url</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditUrl" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">Address</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditAddress" />
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">StartDate</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditStartDate" />
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-4">EndDate</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="text" id="EditEndDate" />
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="UpdateEvent()">Update Event</button>
+                <button type="button" class="btn btn-danger" onclick="DeleteEvent()">Delete Event</button>
+            </div>
+        </div>
+    </div>
+</div>

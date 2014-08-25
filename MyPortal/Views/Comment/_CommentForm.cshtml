@@ -1,0 +1,9 @@
+﻿@model MyPortal.Models.Comment
+
+@Html.HiddenFor(m => m.ArticleId)
+
+<div>
+    @Html.LabelFor(m => m.Content)
+    @Html.EditorFor(m => m.Content)
+</div>
+<button type="submit">Submit</button>
