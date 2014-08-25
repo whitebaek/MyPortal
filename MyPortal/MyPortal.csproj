@@ -199,18 +199,19 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\AnnoChatController.cs" />
     <Compile Include="Controllers\Api\Board2Controller.cs" />
     <Compile Include="Controllers\Api\BoardController.cs" />
     <Compile Include="Controllers\Api\EventsController.cs" />
     <Compile Include="Controllers\BoardApiController.cs" />
     <Compile Include="Controllers\BoardController.cs" />
-    <Compile Include="Controllers\ChatController.cs" />
     <Compile Include="Controllers\CommentController.cs" />
     <Compile Include="Controllers\EventsController.cs" />
     <Compile Include="Controllers\oDataClientController.cs" />
     <Compile Include="Controllers\oData\ArticleController.cs" />
     <Compile Include="Controllers\oData\Default1Controller.cs" />
     <Compile Include="Controllers\UserController.cs" />
+    <Compile Include="Hubs\ChatHub.cs" />
     <Compile Include="Hubs\EventHub.cs" />
     <Compile Include="Models\Article.cs" />
     <Compile Include="Models\EventModel.cs" />
@@ -321,9 +322,6 @@
     <Content Include="Views\BoardApi\Edit.cshtml" />
     <Content Include="Views\Home\Board_List.cshtml" />
     <Content Include="Views\Home\Board_Create.cshtml" />
-    <Content Include="Views\Chat\Index.cshtml" />
-    <Content Include="Views\Chat\ChatHistory.cshtml" />
-    <Content Include="Views\Chat\Lobby.cshtml" />
     <Content Include="Views\Events\Index.cshtml" />
     <Content Include="Views\Events\Board.cshtml" />
     <Content Include="Views\Events\Browser.cshtml" />
@@ -331,6 +329,7 @@
     <Content Include="Views\Events\Details.cshtml" />
     <Content Include="Views\Events\Create.cshtml" />
     <Content Include="Views\Events\Edit.cshtml" />
+    <Content Include="Views\AnnoChat\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

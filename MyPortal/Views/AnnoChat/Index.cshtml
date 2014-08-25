@@ -1,0 +1,41 @@
+﻿@{
+    ViewBag.Title = "Anno Chat";
+}
+<h2>@ViewBag.Title.</h2>
+<h3>@ViewBag.Message</h3>
+
+<p>Use this area to provide additional information.</p>
+
+<input id="message" />
+<button id="sendMessage">Send message</button>
+
+<div id="chatLog"></div>
+
+@section scripts
+{
+    <script src="~/Scripts/jquery.signalR-2.1.1.js"></script>
+    @*//Auto generated script by signalr*@
+    <script src="/signalr/hubs"></script>
+
+    <script>
+        $(function () {
+            //Declare a proxy to reference the hub
+            var chatHub = $.connection.chatHub;
+
+            chatHub.client.broadcastMessage = function (message) {
+                $("#chatLog").append(message + "<br />");
+
+            };
+
+            //start the connection.
+            $.connection.hub.start().done();
+
+            $("#sendMessage").click(function () {
+                chatHub.server.sendMessage($("#message").val());
+            });
+
+        });
+</script>
+
+}
+
